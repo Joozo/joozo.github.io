@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-CN" lang="zh-CN">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="author" content="Yonsm" />
+    <title>真正能还原/修复 iPhone PNG 的有效方法</title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link href="/feed/" rel="alternate" title="Yonsm" type="application/atom+xml" />
+    <link rel="stylesheet" href="/media/css/style.css" />
+    <link rel="stylesheet" href="/media/css/highlight.css" />
+    <script type="text/javascript" src="/media/js/jquery-1.7.1.min.js"></script>
+  </head>
+  <body>
+    <div id="container">
+      <div id="main" role="main">
+        <header>
+        <h1>真正能还原/修复 iPhone PNG 的有效方法</h1>
+        </header>
+        <nav>
+        <span><a title="网站首页" class="" href="/">首页</a></span>
+        <span><a title="文章分类" class="" href="/categories/">分类</a></span>
+        <span><a title="标签索引" class="" href="/tags/">标签</a></span>
+        <!--<span><a title="友情链接" class="" href="/links/">链接</a></span>-->
+        <span><a title="留言交流" class="" href="/guestbook/">留言</a></span>
+        <span><a title="关于站长" class="" href="/about/">关于</a></span>
+        <span><a title="种子订阅" class="" href="/feed/" target="_blank">订阅</a></span>
+        </nav>
+        <article class="content">
+        <section class="meta">
+<span class="time">
+  <time datetime="2012-08-21">2012-08-21</time>
+</span>
+
+ | 
+<span class="categories">
+  分类
+  
+  <a href="/categories/#文档" title="文档">文档</a>&nbsp;
+  
+</span>
+
+
+ | 
+<span class="tags">
+  标签
+  
+  <a href="/tags/#iOS" title="iOS">iOS</a>&nbsp;
+  
+  <a href="/tags/#编程" title="编程">编程</a>&nbsp;
+  
+</span>
+
+</section>
+<section class="post">
+<p>iPhone/iPad 的 IPA 包中的  PNG 文件在编译时默认会做特殊处理（应该是以便硬件加速解码？），有时候需要“参考”下第三方的 PNG 图片的时候带来了巨大的麻烦：一直流传着各种方法和工具，分别是 Windows 下的 FixPng、Mac下的iPhone PNG Fix、Python脚本修复、PNG Nomalizer（<a href="http://www.beyondcow.com/pngnormalizer/">http://www.beyondcow.com/pngnormalizer/</a>），在线修复（<a href="http://www.raisedtech.com/iphone-ipa-png/">http://www.raisedtech.com/iphone-ipa-png/</a>）等等这种各样。实际用下来基本上对于现在的 IPA 文件中的 PNG 多半有很多图片无法还原。</p>
+
+<p>解铃还须系铃人，为了真正解决这个问题，我们还是从 iOS 设备上入手吧：</p>
+
+<!-- more -->
+
+
+<p>1.先拿到 IPA 解出所有的 PNG；</p>
+
+<p>2.编译到我们的程序 iOS App 中；</p>
+
+<p>3.在程序中枚举所有的 PNG，装载，重新保存为 PNG——此时生成的 PNG 就是通用格式的 PNG 啦，真正解决了问题：</p>
+
+<p><figure class="highlight"><pre><code class="language-objc" data-lang="objc"><table style="border-spacing: 0"><tbody><tr><td class="gutter gl" style="text-align: right"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30</pre></td><td class="code"><pre><span class="c1">//
+</span><span class="n">BOOL</span> <span class="n">UIUtil</span><span class="o">::</span><span class="n">NormalizePngFile</span><span class="p">(</span><span class="n">NSString</span> <span class="o"><em></span><span class="n">dst</span><span class="p">,</span> <span class="n">NSString</span> <span class="o"></em></span><span class="n">src</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">NSString</span> <span class="o">*</span><span class="n">dir</span> <span class="o">=</span> <span class="n">dst</span><span class="p">.</span><span class="n">stringByDeletingLastPathComponent</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">([[</span><span class="n">NSFileManager</span> <span class="nf">defaultManager</span><span class="p">]</span> <span class="nf">fileExistsAtPath</span><span class="p">:</span><span class="n">dir</span><span class="p">]</span> <span class="o">==</span> <span class="nb">NO</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="p">[[</span><span class="n">NSFileManager</span> <span class="nf">defaultManager</span><span class="p">]</span> <span class="nf">createDirectoryAtPath</span><span class="p">:</span><span class="n">dir</span> <span class="nf">withIntermediateDirectories</span><span class="p">:</span><span class="nb">YES</span> <span class="nf">attributes</span><span class="p">:</span><span class="nb">nil</span> <span class="nf">error</span><span class="p">:</span><span class="nb">nil</span><span class="p">];</span>
+    <span class="p">}</span></p>
+
+<pre><code>&lt;span class="n"&gt;UIImage&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;image&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;UIImage&lt;/span&gt; &lt;span class="nf"&gt;imageWithContentsOfFile&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;image&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="nb"&gt;nil&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nb"&gt;NO&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="n"&gt;NSData&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;UIImagePNGRepresentation&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;image&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="nb"&gt;nil&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nb"&gt;NO&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt; &lt;span class="nf"&gt;writeToFile&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="n"&gt;dst&lt;/span&gt; &lt;span class="nf"&gt;atomically&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="nb"&gt;NO&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+</code></pre>
+
+<p><span class="p">}</span></p>
+
+<p><span class="c1">//
+</span><span class="kt">void</span> <span class="n">UIUtil</span><span class="o">::</span><span class="n">NormalizePngFolder</span><span class="p">(</span><span class="n">NSString</span> <span class="o"><em></span><span class="n">dst</span><span class="p">,</span> <span class="n">NSString</span> <span class="o"></em></span><span class="n">src</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">NSArray</span> <span class="o"><em></span><span class="n">files</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSFileManager</span> <span class="nf">defaultManager</span><span class="p">]</span> <span class="nf">subpathsAtPath</span><span class="p">:</span><span class="n">src</span><span class="p">];</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">NSString</span> <span class="o"></em></span><span class="n">file</span> <span class="k">in</span> <span class="n">files</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">([</span><span class="n">file</span><span class="p">.</span><span class="n">lowercaseString</span> <span class="nf">hasSuffix</span><span class="p">:</span><span class="s">@".png"</span><span class="p">])</span>
+        <span class="p">{</span>
+            <span class="n">NormalizePngFile</span><span class="p">([</span><span class="n">dst</span> <span class="nf">stringByAppendingPathComponent</span><span class="p">:</span><span class="n">file</span><span class="p">],</span> <span class="p">[</span><span class="n">src</span> <span class="nf">stringByAppendingPathComponent</span><span class="p">:</span><span class="n">file</span><span class="p">]);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></figure></p>
+
+<p>4.拷贝出这些 PNG 来即可。</p>
+
+<p>上面仅仅时代码片段，可以完善一下，可以写个小程序，输入 IPA 的地址直接把图片还原出来。</p>
+
+</section>
+<section align="right">
+<br/>
+<span>
+	<a  href="/%E8%B5%84%E6%BA%90/2012/07/24/hd600-rom.html" class="pageNav"  >上一篇</a>
+	&nbsp;&nbsp;&nbsp;
+	<a  href="/%E6%96%87%E6%A1%A3/2012/08/23/use-windows8-efi-mode-on-mac.html" class="pageNav"  >下一篇</a>
+</span>
+</section>
+
+	
+	<div class="ds-thread" data-thread-key="734" data-url="http://yonsm.net/%E6%96%87%E6%A1%A3/2012/08/21/restore-iphone-png.html" data-title="真正能还原/修复 iPhone PNG 的有效方法" />
+		
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"yonsm"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = 'http://static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		|| document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+
+
+        </article>
+      </div>
+
+    <footer>
+        <p><small>
+            <a href="http://github.com/Yonsm/NET/new/gh-pages/_posts" target="_blank" title="撰写文章">Po</a>wer<a href="http://github.com/Yonsm/NET/edit/gh-pages/_posts/2012-08-21-restore-iphone-png.md" target="_blank" title="编辑页面">ed</a> by <a href="http://jekyllrb.com" target="_blank">Jekyll</a> @ <a href="http://github.com/Yonsm/NET" target="_blank" title="项目主页">GitHub</a>
+             | <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/cn/" target="_blank" title="许可协议">©</a> 2004 - 2015 <a href="/about/">Yonsm</a>
+
+             | <a href="http://www.miibeian.gov.cn" target="_blank">浙ICP备12026616号</a>
+
+
+             | <script src="http://s85.cnzz.com/stat.php?id=119959"></script>
+
+         </small></p>
+    </footer>
+
+    </div>
+  </body>
+</html>
